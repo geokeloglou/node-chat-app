@@ -1,6 +1,6 @@
 var socket = io();
 
-function scrollToBottom () {
+function scrollToBottom() {
     // Selectors
     var messages = jQuery('#messages');
     var newMessage = messages.children('li:last-child');
@@ -37,13 +37,12 @@ socket.on('newMessage', function (message) {
     scrollToBottom();
 });
 
-socket.on(`newLocationMessage`, function (message) {
+socket.on('newLocationMessage', function (message) {
     var formattedTime = moment(message.createdAt).format('h:mm a');
-
     var template = jQuery('#location-message-template').html();
     var html = Mustache.render(template, {
-        text: message.text,
-        from: message.url,
+        from: message.from,
+        url: message.url,
         createdAt: formattedTime
     });
 
