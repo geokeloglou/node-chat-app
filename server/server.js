@@ -10,7 +10,9 @@ const {
 const {
     isRealString
 } = require('./utils/validation');
-const {Users} = require('./utils/users');
+const {
+    Users
+} = require('./utils/users');
 
 const publicPath = path.join(__dirname, '../public');
 const port = process.env.PORT || 3000;
@@ -26,17 +28,21 @@ io.on('connection', (socket) => {
 
     socket.on('join', (params, callback) => {
         if (!isRealString(params.name) || !isRealString(params.room)) {
-            return callback('Name and room name are required.'); 
+            return callback('Name and room name are required.');
         }
 
         socket.join(params.room);
         users.removeUser(socket.id);
-        users.addUser(socket.id, params.name, params.room);
+        const userAdditionResult = users.addUser(socket.id, params.name, params.room);
+        if (userAdditionResult) {
+            io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+            socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
+            socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has joined.`));
+            callback();
+        } else {
+            return callback('Name exists.');            
+        }
 
-        io.to(params.room).emit('updateUserList', users.getUserList(params.room));
-        socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
-        socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has joined.`));
-        callback();
     });
 
     socket.on('createMessage', (message, callback) => {
